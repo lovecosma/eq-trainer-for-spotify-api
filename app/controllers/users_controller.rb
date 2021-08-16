@@ -2,6 +2,7 @@ class UsersController < ApplicationController
     include ApplicationHelper
     
     def show
+        # binding.pry
         @user = User.find(params[:id])
         render json: @user.to_json(:include => {
             :playlists => {:include => :tracks },
@@ -54,8 +55,14 @@ class UsersController < ApplicationController
         )
         session[:user_id] = @user.id
         playlists = get_user_playlists(payload.first["access_token"])
+        # binding.pry
         releases_response = RestClient.get("https://api.spotify.com/v1/browse/new-releases", header)
         new_releases = JSON.parse(releases_response.body)
+        new_releases["albums"]["items"].each do |album|
+            # binding.pry
+            a = Album.find_or_create_by(album_id: album["id"], name: album["name"], image: album["images"].first["url"])
+            
+        end 
         render json: @user.to_json(:include => {
             :playlists => {:include => :tracks },
         })
