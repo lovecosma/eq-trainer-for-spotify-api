@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_17_013952) do
+ActiveRecord::Schema.define(version: 2021_08_18_041609) do
 
   create_table "albums", force: :cascade do |t|
     t.string "album_id"
@@ -58,6 +58,7 @@ ActiveRecord::Schema.define(version: 2021_08_17_013952) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "image_url"
+    t.string "email"
   end
 
 end
