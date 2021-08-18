@@ -2,10 +2,9 @@ class UsersController < ApplicationController
     include ApplicationHelper
     
     def show
-        # binding.pry
         @user = User.find(params[:id])
         render json: @user.to_json(:include => {
-            :playlists => {:include => :tracks },
+            :playlists => {:include => :tracks }
         })
     end 
     
@@ -74,6 +73,12 @@ class UsersController < ApplicationController
             :playlists => {:include => :tracks },
         })
     end 
+
+
+    def user_tracks
+        user = User.find(params[:user_id])
+        render json: user.tracks
+    end 
     
     private 
     
@@ -101,11 +106,13 @@ class UsersController < ApplicationController
         user_response = RestClient.get(playlist.tracks_url, header)
         playlist_tracks = JSON.parse(user_response.body)
         playlist_tracks["items"].each do |track|
+            # binding.pry
             if track["track"]["preview_url"]
             t = Track.find_or_create_by(
                 name: track["track"]["name"],
                 preview_url: track["track"]["preview_url"],
-                artist: track["track"]["artist"]
+                artist: track["track"]["artist"],
+                album_art: track["track"]["album"]["images"].first["url"]
                 )
                 playlist.tracks << t
             end 
