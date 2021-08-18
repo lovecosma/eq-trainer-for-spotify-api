@@ -19,6 +19,11 @@ class UsersController < ApplicationController
         }
         redirect_to spotify_url = url + "?" +  query_params.to_query
     end 
+
+    def logout
+        session.clear
+        render json: {}
+    end 
     
     def get_spotify_authorization
         url = "https://accounts.spotify.com/api/token"
@@ -49,9 +54,11 @@ class UsersController < ApplicationController
         }
         user_response = RestClient.get("https://api.spotify.com/v1/me", header)
         user_info = JSON.parse(user_response.body)
+        # binding.pry
         @user = User.find_or_create_by(display_name: user_info["display_name"], 
         spotify_id: user_info["id"], 
-        api_url: user_info["href"]
+        api_url: user_info["href"],
+        image_url: user_info["images"].first["url"]
         )
         session[:user_id] = @user.id
         playlists = get_user_playlists(payload.first["access_token"])
