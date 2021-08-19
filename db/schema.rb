@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_18_204207) do
+ActiveRecord::Schema.define(version: 2021_08_19_034810) do
 
   create_table "albums", force: :cascade do |t|
     t.string "album_id"
@@ -26,6 +26,7 @@ ActiveRecord::Schema.define(version: 2021_08_18_204207) do
     t.integer "user_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "playlist_id"
   end
 
   create_table "playlists_tracks", force: :cascade do |t|
@@ -37,11 +38,6 @@ ActiveRecord::Schema.define(version: 2021_08_18_204207) do
     t.index ["track_id"], name: "index_playlists_tracks_on_track_id"
   end
 
-  create_table "preview_tracks", force: :cascade do |t|
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-  end
-
   create_table "tracks", force: :cascade do |t|
     t.string "name"
     t.string "preview_url"
@@ -50,6 +46,7 @@ ActiveRecord::Schema.define(version: 2021_08_18_204207) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "type"
     t.string "album_art"
+    t.string "track_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -59,7 +56,6 @@ ActiveRecord::Schema.define(version: 2021_08_18_204207) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "image_url"
-    t.string "email"
   end
 
 end
