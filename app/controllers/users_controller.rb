@@ -35,19 +35,13 @@ class UsersController < ApplicationController
         }
         resp = RestClient.post(url, body)
         auth_params = JSON.parse(resp.body)
-        
-        payload = {
-            access_token: auth_params["access_token"],
-            refresh_token: auth_params["refresh_token"]
-        }
-        token = encode_token(payload)
-        redirect_to "http://localhost:3000/login_success/" +  token
+        session[:access_token] = auth_params["access_token"]
+        session[:refresh_token] = auth_params["refresh_token" ]
+        redirect_to "http://localhost:3000/"
     end 
     
     
-    def create_spotify_user
-        payload = decode_token(request.headers["Authorization"])
-     
+    def create_spotify_user     
         header = {
             Authorization: "Bearer #{payload.first["access_token"]}"
         }
