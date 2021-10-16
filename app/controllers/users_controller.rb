@@ -2,11 +2,17 @@ class UsersController < ApplicationController
     include ApplicationHelper
     
     def show
-        @user = User.find(params[:id])
-        render json: @user.to_json(:include => {
-            :playlists => {:include => :tracks }
-        })
+        user = User.find(params[:id])
+
+        if(user)
+            render json: user.to_json(:include => :playlists)
+        else
+            render json: {error: "User not found."}
+        end
+
     end 
+
+
     
     def login
         url = "https://accounts.spotify.com/authorize"
@@ -36,36 +42,33 @@ class UsersController < ApplicationController
         resp = RestClient.post(url, body)
         auth_params = JSON.parse(resp.body)
         session[:access_token] = auth_params["access_token"]
-        session[:refresh_token] = auth_params["refresh_token" ]
-        redirect_to "http://localhost:3000/"
+        session[:refresh_token] = auth_params["refresh_token"]
+        redirect_to "/get_info"
     end 
     
     
-    def create_spotify_user     
+    def create_spotify_user
         header = {
-            Authorization: "Bearer #{payload.first["access_token"]}"
+            Authorization: "Bearer #{session["access_token"]}"
         }
         user_response = RestClient.get("https://api.spotify.com/v1/me", header)
         user_info = JSON.parse(user_response.body)
-        # binding.pry
         @user = User.find_or_create_by(display_name: user_info["display_name"], 
-        spotify_id: user_info["id"], 
-        api_url: user_info["href"],
-        image_url: user_info["images"].first["url"]
+            spotify_id: user_info["id"], 
+            api_url: user_info["href"],
+            image_url: user_info["images"].first["url"]
         )
-        session[:user_id] = @user.id
-        playlists = get_user_playlists(payload.first["access_token"])
-        # binding.pry
-        releases_response = RestClient.get("https://api.spotify.com/v1/browse/new-releases", header)
-        new_releases = JSON.parse(releases_response.body)
-        new_releases["albums"]["items"].each do |album|
-            # binding.pry
-            a = Album.find_or_create_by(album_id: album["id"], name: album["name"], image: album["images"].first["url"])
-            
+        header = {
+            Authorization: "Bearer #{token}"
+        }
+        user_response = RestClient.get("https://api.spotify.com/v1/me/playlists", header)
+        user_playlists = JSON.parse(user_response.body)["items"]
+        user_playlists.each do |playlist|
+           p =  Playlist.find_or_create_by(playlist_id: playlist["id"])
+           @user.playists << p if !@user.playlists.include?(p.id)
         end 
-        render json: @user.to_json(:include => {
-            :playlists => {:include => :tracks },
-        })
+        session[:user_id] = @user.id
+        redirect_to "http://localhost:3000/users/#{@user.id}" 
     end 
 
 
@@ -77,24 +80,7 @@ class UsersController < ApplicationController
     private 
     
     def get_user_playlists(token)
-        header = {
-            Authorization: "Bearer #{token}"
-        }
-        user_response = RestClient.get("https://api.spotify.com/v1/me/playlists", header)
-        user_playlists = JSON.parse(user_response.body)["items"]
-        user_playlists.each do |playlist|
-           p =  Playlist.find_by(playlist_id: playlist["id"])
-           if p
-                current_user.playlists << p
-           else
-                p = current_user.playlists.create(
-                    playlist_id: playlist["id"],
-                    name: playlist["name"],
-                    tracks_url: playlist["tracks"]["href"]
-                )
-           end 
-            get_playlist_tracks(p, token)
-        end 
+        
     end 
     
     def get_playlist_tracks(playlist, token)
