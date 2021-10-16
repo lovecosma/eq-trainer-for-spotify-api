@@ -53,22 +53,22 @@ class UsersController < ApplicationController
         }
         user_response = RestClient.get("https://api.spotify.com/v1/me", header)
         user_info = JSON.parse(user_response.body)
-        @user = User.find_or_create_by(display_name: user_info["display_name"], 
-            spotify_id: user_info["id"], 
-            api_url: user_info["href"],
-            image_url: user_info["images"].first["url"]
-        )
+        @user = User.find_or_create_by(display_name: user_info["display_name"])
+            # spotify_id: user_info["id"], 
+            # api_url: user_info["href"],
+            # image_url: user_info["images"].first["url"]
+        # )q
         header = {
-            Authorization: "Bearer #{token}"
+            Authorization: "Bearer #{session["access_token"]}"
         }
         user_response = RestClient.get("https://api.spotify.com/v1/me/playlists", header)
         user_playlists = JSON.parse(user_response.body)["items"]
         user_playlists.each do |playlist|
            p =  Playlist.find_or_create_by(playlist_id: playlist["id"])
-           @user.playists << p if !@user.playlists.include?(p.id)
+           @user.playlists << p if !@user.playlists.include?(p.id)
         end 
         session[:user_id] = @user.id
-        redirect_to "http://localhost:3000/users/#{@user.id}" 
+        redirect_to "http://localhost:3000/users/1" 
     end 
 
 
@@ -78,10 +78,7 @@ class UsersController < ApplicationController
     end 
     
     private 
-    
-    def get_user_playlists(token)
-        
-    end 
+     
     
     def get_playlist_tracks(playlist, token)
     
