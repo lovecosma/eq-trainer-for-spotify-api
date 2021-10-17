@@ -68,7 +68,7 @@ class UsersController < ApplicationController
            @user.playlists << p if !@user.playlists.include?(p.id)
         end 
         session[:user_id] = @user.id
-        redirect_to "http://localhost:3000/users/1" 
+        redirect_to "http://localhost:3000/users/#{@user.id}/initialize" 
     end 
 
 
