@@ -1,13 +1,13 @@
 class UsersController < ApplicationController
     include ApplicationHelper
-    
-    def show
-        user = User.find(params[:id])
+    include ActionController::Cookies
 
-        if(user)
+    def show
+        user = User.find(session[:user_id])
+        if(!!user)
             render json: user.to_json(:include => :playlists)
         else
-            render json: {error: "User not found."}
+            render json: user.errors, status: :unprocessable_entity
         end
 
     end 
@@ -57,7 +57,7 @@ class UsersController < ApplicationController
             # spotify_id: user_info["id"], 
             # api_url: user_info["href"],
             # image_url: user_info["images"].first["url"]
-        # )q
+        # )
         header = {
             Authorization: "Bearer #{session["access_token"]}"
         }
@@ -68,7 +68,8 @@ class UsersController < ApplicationController
            @user.playlists << p if !@user.playlists.include?(p.id)
         end 
         session[:user_id] = @user.id
-        redirect_to "http://localhost:3000/users/#{@user.id}/initialize" 
+        token = encode_token session[:access_token]
+        redirect_to "http://localhost:3000/users/#{@user.id}/initialize"
     end 
 
 

@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::API
 
+include ActionController::Cookies
 
 
 protected 
@@ -10,13 +11,22 @@ def current_user
 end 
 
 def encode_token(payload)
-    token = JWT.encode payload, Rails.application.credentials.secret_key_base, 'HS256'
-    return token
+    JWT.encode payload, Rails.application.credentials.secret_key_base, 'HS256'
 end 
 
-def decode_token(token)
-    decoded_token = JWT.decode token, Rails.application.credentials.secret_key_base, true, { :algorithm => 'HS256' }
-    return decoded_token
+def auth_header 
+    request.headers["Authorization"]
+end 
+
+def decoded_token
+    if auth_header
+        token = auth_header.split(' ')[1]
+        begin
+            JWT.decode token, Rails.application.credentials.secret_key_base, true, { :algorithm => 'HS256' }
+          rescue JWT::DecodeError
+            nil
+        end
+    end 
 end 
 
     
