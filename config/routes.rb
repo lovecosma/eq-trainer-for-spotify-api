@@ -7,5 +7,6 @@ Rails.application.routes.draw do
     post '/logout', to: "users#logout"
     resources :albums
     resources :users 
+    resources :playlists
   end 
 end

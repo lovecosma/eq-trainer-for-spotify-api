@@ -65,7 +65,7 @@ class UsersController < ApplicationController
         user_playlists = JSON.parse(user_response.body)["items"]
         user_playlists.each do |playlist|
            p =  Playlist.find_or_create_by(playlist_id: playlist["id"])
-           @user.playlists << p if !@user.playlists.include?(p.id)
+           @user.playlists << p if !@user.playlists.include?(p.id) && p.update( name: playlist["name"], tracks_url: playlist["tracks"]["href"])
         end 
         session[:user_id] = @user.id
         token = encode_token session[:access_token]
@@ -78,37 +78,8 @@ class UsersController < ApplicationController
         render json: user.tracks
     end 
     
-    private 
      
-    
-    def get_playlist_tracks(playlist, token)
-    
-        header = {
-            Authorization: "Bearer #{token}"
-        }
-        user_response = RestClient.get(playlist.tracks_url, header)
-        playlist_tracks = JSON.parse(user_response.body)
-        playlist_tracks["items"].each do |track|
-            if track["track"]["preview_url"]
-                t = Track.find_by(track_id: track["track"]["id"])
-                if t
-                    playlist.tracks << t     
-                else 
-                t = playlist.tracks.create(
-                    track_id: track["track"]["id"],
-                    name: track["track"]["name"],
-                    preview_url: track["track"]["preview_url"],
-                    artist: track["track"]["artists"].first,
-                    album_art: track["track"]["album"]["images"].first["url"]
-                    ) 
-                end 
-            end 
-        if playlist.tracks.empty?
-            playlist.delete
-        end 
-    
-    end 
-end
+   
     
     end
     
