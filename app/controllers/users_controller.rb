@@ -5,16 +5,15 @@ class UsersController < ApplicationController
     def show
         user = User.find(session[:user_id])
         if(!!user)
-            render json: user.to_json(:include => :playlists)
+            render json: user
         else
             render json: user.errors, status: :unprocessable_entity
         end
 
     end 
 
-
     
-    def login
+    def login_with_spotify
         url = "https://accounts.spotify.com/authorize"
         query_params = {
             client_id: Rails.application.credentials.spotify[:client_id],
@@ -43,33 +42,31 @@ class UsersController < ApplicationController
         auth_params = JSON.parse(resp.body)
         session[:access_token] = auth_params["access_token"]
         session[:refresh_token] = auth_params["refresh_token"]
-        redirect_to "/get_info"
+        new_releases = RestClient.get("https://api.spotify.com/v1/browse/new-releases", {
+            Authorization: "Bearer #{session["access_token"]}"
+        })
+        nr_info = JSON.parse(new_releases.body)
+        nr_info["albums"]["items"].each do |album|
+            Album.find_or_create_by(name: album["name"]) do |album|
+                album.image = album["images"][0]["url"]
+            end 
+        end 
+        redirect_to "/login"
     end 
     
     
-    def create_spotify_user
+    def login
         header = {
             Authorization: "Bearer #{session["access_token"]}"
         }
         user_response = RestClient.get("https://api.spotify.com/v1/me", header)
         user_info = JSON.parse(user_response.body)
-        @user = User.find_or_create_by(display_name: user_info["display_name"])
-            # spotify_id: user_info["id"], 
-            # api_url: user_info["href"],
-            # image_url: user_info["images"].first["url"]
-        # )
-        header = {
-            Authorization: "Bearer #{session["access_token"]}"
-        }
-        user_response = RestClient.get("https://api.spotify.com/v1/me/playlists", header)
-        user_playlists = JSON.parse(user_response.body)["items"]
-        user_playlists.each do |playlist|
-           p =  Playlist.find_or_create_by(playlist_id: playlist["id"])
-           @user.playlists << p if !@user.playlists.include?(p.id) && p.update( name: playlist["name"], tracks_url: playlist["tracks"]["href"])
+        @user = User.find_or_create_by(display_name: user_info["display_name"]) do |user|
+            user.image_url = user_info["images"][0]["url"]
         end 
         session[:user_id] = @user.id
-        token = encode_token session[:access_token]
-        redirect_to "http://localhost:3000/users/#{@user.id}/initialize"
+        cookies[:user] = @user.to_json
+        redirect_to "http://localhost:3000/users/#{@user.id}"
     end 
 
 
