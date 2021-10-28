@@ -29,12 +29,12 @@ ActiveRecord::Schema.define(version: 2021_08_19_034810) do
     t.integer "user_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.string "playlist_id"
+    t.string "spotify_id"
   end
 
   create_table "playlists_tracks", force: :cascade do |t|
-    t.integer "playlist_id"
-    t.integer "track_id"
+    t.bigint "playlist_id"
+    t.bigint "track_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["playlist_id"], name: "index_playlists_tracks_on_playlist_id"

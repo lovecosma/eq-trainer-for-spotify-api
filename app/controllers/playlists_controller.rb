@@ -1,4 +1,28 @@
 class PlaylistsController < ApplicationController
+
+
+    def index  
+        headers = {
+            Authorization: "Bearer #{session[:access_token]}"
+        }
+        user = User.find(session[:user_id])
+        
+        playlists_response = RestClient.get("https://api.spotify.com/v1/me/playlists", headers)
+        playlists_data = JSON.parse(playlists_response)
+
+        playlists_data["items"].each do |playlist_hash|
+            playlist = Playlist.find_or_create_by(spotify_id: playlist_hash["id"]) do |p|
+                p.name = playlist_hash["name"]
+                p.spotify_id = playlist_hash["id"]
+            end 
+            user.playlists << playlist if !user.playlists.include?(playlist)  
+        end 
+
+        render json: user.playlists.to_json
+    
+    end 
+
+
     def show
         playlist = Playlist.find(params[:id])
         get_playlist_tracks(playlist, session[:access_token])
@@ -7,34 +31,6 @@ class PlaylistsController < ApplicationController
 
 
 
-    private
      
-    def get_playlist_tracks(playlist, token)
-    
-        header = {
-            Authorization: "Bearer #{token}"
-        }
-        user_response = RestClient.get(playlist.tracks_url, header)
-        playlist_tracks = JSON.parse(user_response.body)
-        playlist_tracks["items"].each do |track|
-            if track["track"]["preview_url"]
-                t = Track.find_by(track_id: track["track"]["id"])
-                if t
-                    playlist.tracks << t     
-                else 
-                t = playlist.tracks.create(
-                    track_id: track["track"]["id"],
-                    name: track["track"]["name"],
-                    preview_url: track["track"]["preview_url"],
-                    artist: track["track"]["artists"].first,
-                    album_art: track["track"]["album"]["images"].first["url"]
-                    ) 
-                end 
-            end 
-        if playlist.tracks.empty?
-            playlist.delete
-        end 
-    
-    end 
-end
+   
 end

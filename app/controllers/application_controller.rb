@@ -10,6 +10,9 @@ def current_user
     return @user
 end 
 
+def autheticate
+end 
+
 def encode_token(payload)
     JWT.encode payload, Rails.application.credentials.secret_key_base, 'HS256'
 end 

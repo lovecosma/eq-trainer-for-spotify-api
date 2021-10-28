@@ -25,6 +25,7 @@ class UsersController < ApplicationController
     end 
 
     def logout
+        cookies[:user] = ""
         session.clear
         render json: {}
     end 
@@ -47,11 +48,11 @@ class UsersController < ApplicationController
         })
         nr_info = JSON.parse(new_releases.body)
         nr_info["albums"]["items"].each do |album|
-            Album.find_or_create_by(name: album["name"]) do |album|
-                album.image = album["images"][0]["url"]
+            Album.find_or_create_by(name: album["name"]) do |a|
+                a.image = album["images"][0]["url"]
             end 
         end 
-        redirect_to "/login"
+        redirect_to "/api/login"
     end 
     
     
@@ -63,10 +64,11 @@ class UsersController < ApplicationController
         user_info = JSON.parse(user_response.body)
         @user = User.find_or_create_by(display_name: user_info["display_name"]) do |user|
             user.image_url = user_info["images"][0]["url"]
+            user.spotify_id = user_info["id"]
         end 
         session[:user_id] = @user.id
-        cookies[:user] = @user.to_json
-        redirect_to "http://localhost:3000/users/#{@user.id}"
+        cookies[:user] = @user.to_json(:only => [:id, :display_name, :spotify_id, :image_url])
+        redirect_to "http://localhost:3000/users/#{@user.spotify_id}"
     end 
 
 
