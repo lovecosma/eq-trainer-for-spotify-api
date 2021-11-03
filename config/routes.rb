@@ -6,8 +6,6 @@ Rails.application.routes.draw do
     get '/top_albums', to: "albums#top_albums"
     post '/logout', to: "users#logout"
     resources :albums
-    resources :users do 
-      resources :playlists
-    end 
+    resources :playlists
   end 
 end
