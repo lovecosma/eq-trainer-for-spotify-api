@@ -39,6 +39,7 @@ class PlaylistsController < ApplicationController
                 t.preview_url = track_hash["track"]["preview_url"]
                 t.artist = track_hash["track"]["artists"].first["name"]
                 t.album_art = track_hash["track"]["album"]["images"].first["url"] if !!track_hash["track"]["album"]["images"].first
+                t.album_name = track_hash["track"]["album"]["name"]
             end 
             playlist.tracks << track if !playlist.tracks.include?(track) 
         end 
